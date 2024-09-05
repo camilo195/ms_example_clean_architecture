@@ -4,5 +4,5 @@ import co.com.bancolombia.model.customerinformation.CustomerInformation;
 import reactor.core.publisher.Mono;
 
 public interface CustomerInformationGateway {
-    Mono<CustomerInformation> saveDataBase(CustomerInformation customerInformation);
+    Mono<CustomerInformation> registryCustomerInformation(CustomerInformation customerInformation);
 }

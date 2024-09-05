@@ -19,7 +19,7 @@ public class ReactiveRepositoryAdapter extends ReactiveAdapterOperations<Custome
     }
 
     @Override
-    public Mono<CustomerInformation> saveDataBase(CustomerInformation customerInformation) {
+    public Mono<CustomerInformation> registryCustomerInformation(CustomerInformation customerInformation) {
         var customerEntity = mapper.map(customerInformation, CustomerInformationEntity.class);
         return repository.save(customerEntity)
                 .map(this::toEntity);

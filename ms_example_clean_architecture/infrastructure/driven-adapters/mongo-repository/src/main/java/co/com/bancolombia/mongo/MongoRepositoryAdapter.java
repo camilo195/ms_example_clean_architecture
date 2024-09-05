@@ -17,7 +17,7 @@ public class MongoRepositoryAdapter extends AdapterOperations<CustomerInformatio
     }
 
     @Override
-    public Mono<CustomerInformation> saveDataBase(CustomerInformation customerInformation) {
+    public Mono<CustomerInformation> registryCustomerInformation(CustomerInformation customerInformation) {
         var customerMongoDocument = mapper.map(customerInformation, CustomerInformationDocument.class);
         return repository.save(customerMongoDocument).map(this::toEntity);
     }

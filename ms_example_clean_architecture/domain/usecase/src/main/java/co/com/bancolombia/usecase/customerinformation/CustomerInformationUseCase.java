@@ -11,7 +11,7 @@ public class CustomerInformationUseCase {
     private final CustomerInformationGateway gateway;
 
     public Mono<CustomerInformation> registryCustomerInformation(CustomerInformation customerInformation){
-        return gateway.saveDataBase(customerInformation);
+        return gateway.registryCustomerInformation(customerInformation);
     }
 
 }

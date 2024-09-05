@@ -30,6 +30,7 @@ public class Handler {
         return headersValidation.validateHeaders(serverRequest)
                 .flatMap(request -> request.bodyToMono(CustomerInformationRequest.class))
                 .flatMap(creationCustomerHelper::getCustomerModel)
+                .flatMap(CustomerInformation::validateCustomerInformation)
                 .flatMap(customerInformationUseCase::registryCustomerInformation)
                 .flatMap(successResponse())
                 .onErrorResume(BusinessCustomerException.class, exc -> errorResponse().apply(exc));
