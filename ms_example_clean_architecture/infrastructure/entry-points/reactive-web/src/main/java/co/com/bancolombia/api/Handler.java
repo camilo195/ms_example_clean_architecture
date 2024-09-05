@@ -1,70 +1,47 @@
 package co.com.bancolombia.api;
 
+import co.com.bancolombia.api.constants.HandlerConstants;
+import co.com.bancolombia.api.filter.HeadersValidation;
+import co.com.bancolombia.api.handle.HandleMessageResponse;
 import co.com.bancolombia.model.customerinformation.CustomerInformation;
+import co.com.bancolombia.model.customerinformation.exception.BusinessCustomerException;
 import co.com.bancolombia.model.customerinformation.request.CustomerInformationRequest;
-import co.com.bancolombia.model.customerinformation.response.CustomerInformationResponse;
 import co.com.bancolombia.usecase.UseCase;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+import java.util.function.Function;
 
+@Log4j2
 @Component
 @RequiredArgsConstructor
 public class Handler {
 
-    @Value("${app.rest.client-id}")
-    private String clientIdValue;
-
-    @Value("${app.rest.client-secret}")
-    private String clientSecretValue;
-
+    private final HeadersValidation headersValidation;
     private final UseCase useCase;
+    private final HandleMessageResponse handleMessageResponse;
 
-
-    public Mono<ServerResponse> listenGETUseCase(ServerRequest serverRequest) {
-        return validateHeaders(serverRequest)
+    public Mono<ServerResponse> listenRegistryCustomer(ServerRequest serverRequest) {
+        return headersValidation.validateHeaders(serverRequest)
                 .flatMap(request -> request.bodyToMono(CustomerInformationRequest.class))
-                .flatMap(customerRequest -> useCase.saveDataBase(customerRequest))
-                .flatMap(this::createServerResponse)
-                .onErrorResume(error -> {
-                    System.out.println("Error ocurrido: " + error.getMessage());
-                    return Mono.empty();
-                });
+                .flatMap(useCase::saveDataBase)
+                .flatMap(successResponse())
+                .onErrorResume(BusinessCustomerException.class, exc -> errorResponse().apply(exc));
     }
 
-    private Mono<ServerResponse> createServerResponse(CustomerInformation customerInformation){
-        return ServerResponse.ok()
-                .bodyValue(CustomerInformationResponse.builder()
-                        .customerInformation(customerInformation)
-                        .status("Sucess")
-                        .detail("Registro generado con exito")
-                        .code("200")
-                        .build())
-                .doOnNext(response -> System.out.println("Success response"));
+    private Function<CustomerInformation, Mono<? extends ServerResponse>> successResponse(){
+        return data -> ServerResponse.ok()
+                .bodyValue(handleMessageResponse.createResponseSuccess(data))
+                .doOnNext(response -> log.info(HandlerConstants.SUCCESS_RESPONSE));
     }
 
-    public Mono<ServerRequest> validateHeaders(ServerRequest request) {
-
-        var clientId = request.headers().firstHeader("ClientId");
-        var clientSecret = request.headers().firstHeader("ClientSecret");
-        if (clientId != null && !clientId.isBlank() && clientSecret != null && !clientSecret.isBlank()) {
-            return Mono.just(clientId)
-                    .filter(header -> validateCredential(header, clientSecret))
-                    .switchIfEmpty(Mono.defer(() ->
-                            Mono.error(() -> new RuntimeException("Not Authorized"))))
-                    .thenReturn(clientSecret)
-                    .thenReturn(request);
-        } else {
-            return Mono.error(() -> new RuntimeException("Not Authorized"));
-        }
+    private Function<BusinessCustomerException, Mono<? extends ServerResponse>> errorResponse(){
+        return errorKnow -> ServerResponse.status(Integer.parseInt(errorKnow.getStatus()))
+                .bodyValue(handleMessageResponse.createErrorResponse(errorKnow))
+                .doOnNext(error -> log.error(HandlerConstants.ERROR_RESPONSE, errorKnow.getDetail()));
     }
-
-    public boolean validateCredential(String clientId, String clientSecret) {
-        return clientId.equals(this.clientIdValue) && clientSecret.equals(clientSecretValue);
-    }
-
 
 }
