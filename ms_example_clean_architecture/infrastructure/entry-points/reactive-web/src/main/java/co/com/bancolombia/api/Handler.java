@@ -3,10 +3,11 @@ package co.com.bancolombia.api;
 import co.com.bancolombia.api.constants.HandlerConstants;
 import co.com.bancolombia.api.filter.HeadersValidation;
 import co.com.bancolombia.api.handle.HandleMessageResponse;
+import co.com.bancolombia.api.helper.CreationCustomerHelper;
+import co.com.bancolombia.api.request.CustomerInformationRequest;
 import co.com.bancolombia.model.customerinformation.CustomerInformation;
 import co.com.bancolombia.model.customerinformation.exception.BusinessCustomerException;
-import co.com.bancolombia.model.customerinformation.request.CustomerInformationRequest;
-import co.com.bancolombia.usecase.UseCase;
+import co.com.bancolombia.usecase.customerinformation.CustomerInformationUseCase;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
@@ -21,13 +22,15 @@ import java.util.function.Function;
 public class Handler {
 
     private final HeadersValidation headersValidation;
-    private final UseCase useCase;
+    private final CustomerInformationUseCase customerInformationUseCase;
     private final HandleMessageResponse handleMessageResponse;
+    private final CreationCustomerHelper creationCustomerHelper;
 
     public Mono<ServerResponse> listenRegistryCustomer(ServerRequest serverRequest) {
         return headersValidation.validateHeaders(serverRequest)
                 .flatMap(request -> request.bodyToMono(CustomerInformationRequest.class))
-                .flatMap(useCase::saveDataBase)
+                .flatMap(creationCustomerHelper::getCustomerModel)
+                .flatMap(customerInformationUseCase::registryCustomerInformation)
                 .flatMap(successResponse())
                 .onErrorResume(BusinessCustomerException.class, exc -> errorResponse().apply(exc));
     }
