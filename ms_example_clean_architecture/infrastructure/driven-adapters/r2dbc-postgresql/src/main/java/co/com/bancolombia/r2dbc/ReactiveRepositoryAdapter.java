@@ -4,10 +4,10 @@ import co.com.bancolombia.model.customerinformation.CustomerInformation;
 import co.com.bancolombia.model.customerinformation.gateways.CustomerInformationGateway;
 import co.com.bancolombia.r2dbc.entity.CustomerInformationEntity;
 import co.com.bancolombia.r2dbc.helper.ReactiveAdapterOperations;
+import co.com.bancolombia.r2dbc.helper.enums.TypeDocumentEnum;
 import org.reactivecommons.utils.ObjectMapper;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
-
 import java.util.UUID;
 
 @Repository
@@ -20,8 +20,14 @@ public class ReactiveRepositoryAdapter extends ReactiveAdapterOperations<Custome
 
     @Override
     public Mono<CustomerInformation> registryCustomerInformation(CustomerInformation customerInformation) {
-        var customerEntity = mapper.map(customerInformation, CustomerInformationEntity.class);
+        var customerEntity = mapper.map(modifyCustomerInformation(customerInformation), CustomerInformationEntity.class);
         return repository.save(customerEntity)
                 .map(this::toEntity);
+    }
+
+    private CustomerInformation modifyCustomerInformation(CustomerInformation customerInformation){
+        var documentType = TypeDocumentEnum.getTypeDocument(customerInformation.getDocumentType()).getDocumentType();
+        customerInformation.setDocumentType(documentType);
+        return customerInformation;
     }
 }
