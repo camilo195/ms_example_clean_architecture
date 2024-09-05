@@ -5,9 +5,11 @@ import co.com.bancolombia.model.customerinformation.gateways.CustomerInformation
 import co.com.bancolombia.mongo.document.CustomerInformationDocument;
 import co.com.bancolombia.mongo.helper.AdapterOperations;
 import org.reactivecommons.utils.ObjectMapper;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Mono;
 
+@Primary
 @Repository
 public class MongoRepositoryAdapter extends AdapterOperations<CustomerInformation, CustomerInformationDocument, String, MongoDBRepository>
  implements CustomerInformationGateway {
