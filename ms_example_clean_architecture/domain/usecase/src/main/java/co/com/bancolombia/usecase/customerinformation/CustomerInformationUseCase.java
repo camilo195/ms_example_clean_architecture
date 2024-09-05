@@ -8,10 +8,10 @@ import reactor.core.publisher.Mono;
 @RequiredArgsConstructor
 public class CustomerInformationUseCase {
 
-    private final CustomerInformationGateway gateway;
+    private final CustomerInformationGateway customerInformationGateway;
 
     public Mono<CustomerInformation> registryCustomerInformation(CustomerInformation customerInformation){
-        return gateway.registryCustomerInformation(customerInformation);
+        return customerInformationGateway.registryCustomerInformation(customerInformation);
     }
 
 }
